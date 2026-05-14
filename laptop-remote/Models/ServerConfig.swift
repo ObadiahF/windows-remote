@@ -18,20 +18,3 @@ struct ServerConfig: Codable, Equatable {
         socketURL?.appendingPathComponent("health")
     }
 }
-
-extension ServerConfig {
-    private static let storageKey = "laptop-remote.server-config"
-
-    static func load() -> ServerConfig {
-        guard
-            let data = UserDefaults.standard.data(forKey: storageKey),
-            let config = try? JSONDecoder().decode(ServerConfig.self, from: data)
-        else { return .default }
-        return config
-    }
-
-    func save() {
-        guard let data = try? JSONEncoder().encode(self) else { return }
-        UserDefaults.standard.set(data, forKey: Self.storageKey)
-    }
-}
