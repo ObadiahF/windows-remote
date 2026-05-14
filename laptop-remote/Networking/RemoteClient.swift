@@ -16,7 +16,6 @@ enum ConnectionStatus: Equatable {
 final class RemoteClient {
     var config: ServerConfig {
         didSet {
-            config.save()
             if config != oldValue { rebuildSocket() }
         }
     }
@@ -27,7 +26,7 @@ final class RemoteClient {
     private var socket: SocketIOClient?
     private let httpSession: URLSession
 
-    init(config: ServerConfig = .load()) {
+    init(config: ServerConfig = .default) {
         self.config = config
         let cfg = URLSessionConfiguration.default
         cfg.timeoutIntervalForRequest = 5
