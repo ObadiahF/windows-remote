@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		EEB3BBCA2FB546F200F46F28 /* SocketIO in Frameworks */ = {isa = PBXBuildFile; productRef = EEB3BBC92FB546F200F46F28 /* SocketIO */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		EE17BBF92FB53E49001F88AB /* laptop-remote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "laptop-remote.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EEB3BBCA2FB546F200F46F28 /* SocketIO in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +70,7 @@
 			);
 			name = "laptop-remote";
 			packageProductDependencies = (
+				EEB3BBC92FB546F200F46F28 /* SocketIO */,
 			);
 			productName = "laptop-remote";
 			productReference = EE17BBF92FB53E49001F88AB /* laptop-remote.app */;
@@ -94,6 +100,9 @@
 			);
 			mainGroup = EE17BBF02FB53E49001F88AB;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				EEB3BBC82FB546F200F46F28 /* XCRemoteSwiftPackageReference "socket" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = EE17BBFA2FB53E49001F88AB /* Products */;
 			projectDirPath = "";
@@ -332,6 +341,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		EEB3BBC82FB546F200F46F28 /* XCRemoteSwiftPackageReference "socket" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/socketio/socket.io-client-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 16.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		EEB3BBC92FB546F200F46F28 /* SocketIO */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EEB3BBC82FB546F200F46F28 /* XCRemoteSwiftPackageReference "socket" */;
+			productName = SocketIO;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = EE17BBF12FB53E49001F88AB /* Project object */;
 }
