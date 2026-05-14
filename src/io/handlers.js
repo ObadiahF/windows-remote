@@ -1,6 +1,6 @@
 import { pasteText } from '../actions/paste.js';
 import { pressDirection, typeText, pressBackspace } from '../actions/keyboard.js';
-import { pressMedia } from '../actions/media.js';
+import { pressMedia, getMuteState } from '../actions/media.js';
 import { runSystem } from '../actions/system.js';
 
 const DIRECTION_KEYS = new Set(['up', 'down', 'left', 'right', 'select']);
@@ -39,7 +39,19 @@ export function registerHandlers(io, socket) {
         error: `Invalid "action". Must be one of: ${[...MEDIA_ACTIONS].join(', ')}`,
       });
     }
-    await runAction(ack, () => pressMedia(action));
+    try {
+      await pressMedia(action);
+      replyAck(ack, { ok: true });
+      try {
+        const state = await getMuteState();
+        socket.emit('mute:state', state);
+      } catch (err) {
+        console.warn('[mute:state] state query failed:', err.message);
+      }
+    } catch (err) {
+      console.error('[media] failed:', err.message);
+      replyAck(ack, { error: err.message });
+    }
   });
 
   socket.on('system', async (payload, ack) => {
@@ -63,6 +75,17 @@ export function registerHandlers(io, socket) {
   socket.on('keyboard:backspace', async (...args) => {
     const ack = args.find((a) => typeof a === 'function');
     await runAction(ack, () => pressBackspace());
+  });
+
+  socket.on('mute:state:query', async (...args) => {
+    const ack = args.find((a) => typeof a === 'function');
+    try {
+      const state = await getMuteState();
+      replyAck(ack, { ok: true, ...state });
+    } catch (err) {
+      console.error('[mute:state:query] failed:', err.message);
+      replyAck(ack, { error: err.message });
+    }
   });
 }
 

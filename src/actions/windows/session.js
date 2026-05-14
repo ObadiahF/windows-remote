@@ -16,10 +16,50 @@ $sig = @'
 '@
 Add-Type -MemberDefinition $sig -Name 'Win32' -Namespace 'LR' | Out-Null
 
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+namespace LRAudio {
+  [Guid("5CDF2C82-841E-4546-9722-0CF74078229A"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+  public interface IAudioEndpointVolume {
+    int _0(); int _1(); int _2(); int _3(); int _4();
+    int _5(); int _6(); int _7(); int _8(); int _9(); int _10(); int _11();
+    int GetMute(out bool pbMute);
+  }
+  [Guid("D666063F-1587-4E43-81F1-B948E807363F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+  public interface IMMDevice {
+    int Activate(ref Guid iid, int clsCtx, IntPtr pActivationParams, [MarshalAs(UnmanagedType.IUnknown)] out object ppInterface);
+  }
+  [Guid("A95664D2-9614-4F35-A746-DE8DB63617E6"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+  public interface IMMDeviceEnumerator {
+    int _0();
+    int GetDefaultAudioEndpoint(int dataFlow, int role, out IMMDevice ppEndpoint);
+  }
+  [ComImport, Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")]
+  public class MMDeviceEnumeratorComObject { }
+  public static class Audio {
+    public static bool IsMuted() {
+      var de = (IMMDeviceEnumerator)(new MMDeviceEnumeratorComObject());
+      IMMDevice dev; de.GetDefaultAudioEndpoint(0, 1, out dev);
+      Guid iid = typeof(IAudioEndpointVolume).GUID;
+      object o; dev.Activate(ref iid, 23, IntPtr.Zero, out o);
+      var vol = (IAudioEndpointVolume)o;
+      bool m; vol.GetMute(out m);
+      return m;
+    }
+  }
+}
+'@ | Out-Null
+
 function Send-Vk { param([byte]$vk)
   [LR.Win32]::keybd_event($vk, 0, 0, [UIntPtr]::Zero)
   Start-Sleep -Milliseconds 30
   [LR.Win32]::keybd_event($vk, 0, 2, [UIntPtr]::Zero)
+}
+
+function Get-AudioState {
+  $muted = [LRAudio.Audio]::IsMuted()
+  Write-Output (@{ muted = $muted } | ConvertTo-Json -Compress)
 }
 `;
 
@@ -61,12 +101,13 @@ function createSession() {
     const pattern = /__(DONE|ERR)_([a-f0-9]{32})__([^\n]*)\n/;
     while ((match = pattern.exec(stdoutBuf))) {
       const [full, kind, id, tail] = match;
+      const output = stdoutBuf.slice(0, match.index);
       stdoutBuf = stdoutBuf.slice(match.index + full.length);
       const entry = pending.get(id);
       if (!entry) continue;
       pending.delete(id);
       clearTimeout(entry.timer);
-      if (kind === 'DONE') entry.resolve();
+      if (kind === 'DONE') entry.resolve(output);
       else entry.reject(new Error(`PowerShell error: ${tail.trim() || 'unknown'}`));
     }
   });
