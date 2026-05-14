@@ -1,7 +1,9 @@
 import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 
-const COMMAND_TIMEOUT_MS = 8_000;
+const COMMAND_TIMEOUT_MS = 10_000;
+const READY_TIMEOUT_MS = 45_000;
+const READY_MARKER = '__SESSION_READY__';
 
 const SETUP_SCRIPT = `
 $ErrorActionPreference = 'Stop'
@@ -61,6 +63,8 @@ function Get-AudioState {
   $muted = [LRAudio.Audio]::IsMuted()
   Write-Output (@{ muted = $muted } | ConvertTo-Json -Compress)
 }
+
+Write-Host "${READY_MARKER}"
 `;
 
 let session = null;
@@ -91,12 +95,34 @@ function createSession() {
 
   const pending = new Map();
   let stdoutBuf = '';
+  let ready = false;
+  let readyResolve;
+  let readyReject;
+  const readyPromise = new Promise((res, rej) => {
+    readyResolve = res;
+    readyReject = rej;
+  });
+  const readyTimer = setTimeout(() => {
+    if (!ready) readyReject(new Error('PowerShell session setup timeout'));
+  }, READY_TIMEOUT_MS);
 
   proc.stdout.setEncoding('utf8');
   proc.stderr.setEncoding('utf8');
 
   proc.stdout.on('data', (chunk) => {
     stdoutBuf += chunk;
+
+    if (!ready) {
+      const idx = stdoutBuf.indexOf(READY_MARKER);
+      if (idx >= 0) {
+        ready = true;
+        clearTimeout(readyTimer);
+        stdoutBuf = stdoutBuf.slice(idx + READY_MARKER.length);
+        console.log('[ps] session ready');
+        readyResolve();
+      }
+    }
+
     let match;
     const pattern = /__(DONE|ERR)_([a-f0-9]{32})__([^\n]*)\n/;
     while ((match = pattern.exec(stdoutBuf))) {
@@ -119,6 +145,8 @@ function createSession() {
   proc.on('exit', (code, signal) => {
     console.error(`[ps] session exited (code=${code} signal=${signal})`);
     if (session) session.dead = true;
+    clearTimeout(readyTimer);
+    if (!ready) readyReject(new Error(`PowerShell session exited during setup (code=${code})`));
     for (const { reject, timer } of pending.values()) {
       clearTimeout(timer);
       reject(new Error('PowerShell session terminated'));
@@ -131,7 +159,9 @@ function createSession() {
   return {
     proc,
     dead: false,
-    exec(script) {
+    ready: readyPromise,
+    async exec(script) {
+      await readyPromise;
       const id = randomUUID().replace(/-/g, '');
       return new Promise((resolve, reject) => {
         const timer = setTimeout(() => {
