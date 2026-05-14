@@ -2,6 +2,7 @@ import http from 'node:http';
 
 import { createApp } from './app.js';
 import { attachSocketIO } from './io/index.js';
+import { closeSession } from './actions/windows/session.js';
 
 const port = Number(process.env.PORT) || 3000;
 const host = process.env.HOST || '0.0.0.0';
@@ -18,6 +19,7 @@ server.listen(port, host, () => {
 
 const shutdown = (signal) => {
   console.log(`Received ${signal}, shutting down...`);
+  closeSession();
   server.close(() => process.exit(0));
 };
 
