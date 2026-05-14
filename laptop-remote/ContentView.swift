@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var store = ProfileStore()
     @State private var client = RemoteClient()
     @State private var showSettings = false
     @State private var showKeyboard = false
@@ -25,7 +26,7 @@ struct ContentView: View {
             }
             .padding()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .navigationTitle("Remote")
+            .navigationTitle(store.active.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -55,9 +56,14 @@ struct ContentView: View {
             }
         }
         .environment(client)
+        .environment(store)
+        .onAppear(perform: applyActiveProfile)
+        .onChange(of: store.active) { _, _ in applyActiveProfile() }
         .task { await client.ping() }
         .sheet(isPresented: $showSettings) {
-            SettingsView().environment(client)
+            SettingsView()
+                .environment(client)
+                .environment(store)
         }
         .fullScreenCover(isPresented: $showKeyboard) {
             KeyboardScreen().environment(client)
@@ -67,6 +73,10 @@ struct ContentView: View {
     private func send(_ command: RemoteCommand) {
         Haptics.tap()
         client.send(command)
+    }
+
+    private func applyActiveProfile() {
+        client.config = store.active.serverConfig
     }
 }
 
