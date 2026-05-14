@@ -1,11 +1,11 @@
-import { execPowerShell, psSingleQuote, escapeSendKeys } from './windows/session.js';
+import { execPowerShell, psSingleQuote } from './windows/session.js';
 
-const DIRECTION_TO_SENDKEY = {
-  up: '{UP}',
-  down: '{DOWN}',
-  left: '{LEFT}',
-  right: '{RIGHT}',
-  select: '{ENTER}',
+const DIRECTION_VK = {
+  up: 0x26,
+  down: 0x28,
+  left: 0x25,
+  right: 0x27,
+  select: 0x0D,
 };
 
 export async function pressDirection(key) {
@@ -14,9 +14,7 @@ export async function pressDirection(key) {
       console.log(`[direction:mac-stub] would press: ${key}`);
       return;
     case 'win32':
-      return execPowerShell(
-        `[System.Windows.Forms.SendKeys]::SendWait('${DIRECTION_TO_SENDKEY[key]}')`,
-      );
+      return execPowerShell(`Send-Vk ${DIRECTION_VK[key]}`);
     default:
       throw new Error(`Unsupported platform: ${process.platform}`);
   }
@@ -28,9 +26,7 @@ export async function typeText(text) {
       console.log(`[keyboard:type:mac-stub] would type: ${JSON.stringify(text)}`);
       return;
     case 'win32':
-      return execPowerShell(
-        `[System.Windows.Forms.SendKeys]::SendWait(${psSingleQuote(escapeSendKeys(text))})`,
-      );
+      return execPowerShell(`Type-Text ${psSingleQuote(text)}`);
     default:
       throw new Error(`Unsupported platform: ${process.platform}`);
   }
@@ -42,7 +38,7 @@ export async function pressBackspace() {
       console.log('[keyboard:backspace:mac-stub] would press backspace');
       return;
     case 'win32':
-      return execPowerShell(`[System.Windows.Forms.SendKeys]::SendWait('{BS}')`);
+      return execPowerShell('Send-Vk 0x08');
     default:
       throw new Error(`Unsupported platform: ${process.platform}`);
   }

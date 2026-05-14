@@ -7,7 +7,7 @@ export async function pasteText(text) {
       return;
     case 'win32':
       return execPowerShell(
-        `Set-Clipboard -Value ${psSingleQuote(text)}; [System.Windows.Forms.SendKeys]::SendWait('^v')`,
+        `Set-Clipboard -Value ${psSingleQuote(text)}; Send-Chord @(0x11) 0x56`,
       );
     default:
       throw new Error(`Unsupported platform: ${process.platform}`);

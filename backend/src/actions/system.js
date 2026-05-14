@@ -17,7 +17,7 @@ function buildSystemScript(action) {
     case 'sleep':
       return 'rundll32.exe powrprof.dll,SetSuspendState 0,1,0';
     case 'back':
-      return `[System.Windows.Forms.SendKeys]::SendWait('{ESC}')`;
+      return 'Send-Vk 0x1B';
     default:
       throw new Error(`Unknown system action: ${action}`);
   }

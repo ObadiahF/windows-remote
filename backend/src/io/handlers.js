@@ -19,7 +19,7 @@ export function registerHandlers(io, socket) {
     if (!text || typeof text !== 'string') {
       return replyAck(ack, { error: 'Missing "text" string' });
     }
-    await runAction(ack, () => pasteText(text), { length: text.length });
+    await runAction(ack, () => pasteText(text), 'paste', { length: text.length });
   });
 
   socket.on('direction', async (payload, ack) => {
@@ -29,7 +29,7 @@ export function registerHandlers(io, socket) {
         error: `Invalid "key". Must be one of: ${[...DIRECTION_KEYS].join(', ')}`,
       });
     }
-    await runAction(ack, () => pressDirection(key));
+    await runAction(ack, () => pressDirection(key), `direction:${key}`);
   });
 
   socket.on('media', async (payload, ack) => {
@@ -61,7 +61,7 @@ export function registerHandlers(io, socket) {
         error: `Invalid "action". Must be one of: ${[...SYSTEM_ACTIONS].join(', ')}`,
       });
     }
-    await runAction(ack, () => runSystem(action));
+    await runAction(ack, () => runSystem(action), `system:${action}`);
   });
 
   socket.on('keyboard:type', async (payload, ack) => {
@@ -69,12 +69,12 @@ export function registerHandlers(io, socket) {
     if (typeof text !== 'string' || text.length === 0) {
       return replyAck(ack, { error: 'Missing "text" string' });
     }
-    await runAction(ack, () => typeText(text));
+    await runAction(ack, () => typeText(text), 'keyboard:type');
   });
 
   socket.on('keyboard:backspace', async (...args) => {
     const ack = args.find((a) => typeof a === 'function');
-    await runAction(ack, () => pressBackspace());
+    await runAction(ack, () => pressBackspace(), 'keyboard:backspace');
   });
 
   socket.on('mute:state:query', async (...args) => {
@@ -89,12 +89,12 @@ export function registerHandlers(io, socket) {
   });
 }
 
-async function runAction(ack, action, extraOk = {}) {
+async function runAction(ack, action, label = 'action', extraOk = {}) {
   try {
     await action();
     replyAck(ack, { ok: true, ...extraOk });
   } catch (err) {
-    console.error('[action] failed:', err.message);
+    console.error(`[${label}] failed:`, err.message);
     replyAck(ack, { error: err.message });
   }
 }
