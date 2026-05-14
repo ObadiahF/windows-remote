@@ -2,32 +2,43 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(RemoteClient.self) private var client
+    @Environment(ProfileStore.self) private var store
     @Environment(\.dismiss) private var dismiss
 
-    @State private var host = ""
-    @State private var portText = ""
+    @State private var editing: Profile?
+    @State private var adding = false
 
     var body: some View {
         NavigationStack {
             Form {
-                Section("Server") {
-                    LabeledContent("Host") {
-                        TextField("192.168.1.100", text: $host)
-                            .keyboardType(.URL)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                            .multilineTextAlignment(.trailing)
+                Section("Profiles") {
+                    ForEach(store.profiles) { profile in
+                        ProfileRow(
+                            profile: profile,
+                            isActive: profile.id == store.activeID,
+                            onSelect: { store.setActive(profile.id) },
+                            onEdit: { editing = profile }
+                        )
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            if store.profiles.count > 1 {
+                                Button(role: .destructive) {
+                                    store.delete(profile.id)
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
+                        }
                     }
-                    LabeledContent("Port") {
-                        TextField("3000", text: $portText)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
+
+                    Button {
+                        adding = true
+                    } label: {
+                        Label("Add Profile", systemImage: "plus.circle.fill")
                     }
                 }
 
-                Section {
-                    Button("Save & Test Connection") {
-                        save()
+                Section("Connection") {
+                    Button("Test Connection") {
                         Task { await client.ping() }
                     }
                     statusRow
@@ -40,7 +51,14 @@ struct SettingsView: View {
                     Button("Done") { dismiss() }
                 }
             }
-            .onAppear(perform: load)
+            .navigationDestination(item: $editing) { profile in
+                ProfileEditView(mode: .edit(profile))
+                    .environment(store)
+            }
+            .navigationDestination(isPresented: $adding) {
+                ProfileEditView(mode: .add)
+                    .environment(store)
+            }
         }
     }
 
@@ -48,7 +66,7 @@ struct SettingsView: View {
     private var statusRow: some View {
         switch client.status {
         case .unknown:
-            Label("Not tested yet", systemImage: "questionmark.circle")
+            Label("Not connected", systemImage: "questionmark.circle")
                 .foregroundStyle(.secondary)
         case .connecting:
             Label("Connecting…", systemImage: "arrow.triangle.2.circlepath")
@@ -61,17 +79,35 @@ struct SettingsView: View {
                 .foregroundStyle(.red)
         }
     }
+}
 
-    private func load() {
-        host = client.config.host
-        portText = String(client.config.port)
-    }
+private struct ProfileRow: View {
+    let profile: Profile
+    let isActive: Bool
+    let onSelect: () -> Void
+    let onEdit: () -> Void
 
-    private func save() {
-        let port = Int(portText) ?? client.config.port
-        client.config = ServerConfig(
-            host: host.trimmingCharacters(in: .whitespaces),
-            port: port
-        )
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: isActive ? "checkmark.circle.fill" : "circle")
+                .foregroundStyle(isActive ? Color.accentColor : Color.secondary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(profile.name)
+                    .foregroundStyle(.primary)
+                Text(profile.subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Button(action: onEdit) {
+                Image(systemName: "pencil")
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 4)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onSelect)
     }
 }
