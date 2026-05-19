@@ -5,6 +5,8 @@ const MEDIA_VK = {
   volume_up: 0xAF,
   volume_down: 0xAE,
   mute: 0xAD,
+  next_track: 0xB0,
+  prev_track: 0xB1,
 };
 
 let macFakeMuted = false;

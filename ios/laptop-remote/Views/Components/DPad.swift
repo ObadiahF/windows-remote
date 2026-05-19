@@ -46,10 +46,10 @@ struct DPad: View {
                 .fill(.tint)
                 .overlay(
                     Text("OK")
-                        .font(.headline.weight(.bold))
+                        .font(.title3.weight(.bold))
                         .foregroundStyle(.white)
                 )
-                .padding(6)
+                .padding(-4)
         }
         .buttonStyle(.plain)
     }

@@ -9,6 +9,8 @@ enum MediaAction: String, Codable {
     case volumeUp = "volume_up"
     case volumeDown = "volume_down"
     case mute
+    case nextTrack = "next_track"
+    case prevTrack = "prev_track"
 }
 
 enum SystemAction: String, Codable {

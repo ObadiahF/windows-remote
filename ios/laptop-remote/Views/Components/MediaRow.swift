@@ -4,12 +4,20 @@ struct MediaRow: View {
     let onPlayPause: () -> Void
     let onBack: () -> Void
     let onKeyboard: () -> Void
+    let onPrevTrack: () -> Void
+    let onNextTrack: () -> Void
 
     var body: some View {
-        HStack(spacing: 12) {
-            pill("arrow.uturn.backward", action: onBack)
-            pill("playpause.fill", action: onPlayPause, prominent: true)
-            pill("keyboard", action: onKeyboard)
+        VStack(spacing: 12) {
+            HStack(spacing: 12) {
+                pill("backward.fill", action: onPrevTrack)
+                pill("playpause.fill", action: onPlayPause, prominent: true)
+                pill("forward.fill", action: onNextTrack)
+            }
+            HStack(spacing: 12) {
+                pill("arrow.uturn.backward", action: onBack)
+                pill("keyboard", action: onKeyboard)
+            }
         }
     }
 
