@@ -4,7 +4,7 @@ import { pressMedia, getMuteState } from '../actions/media.js';
 import { runSystem } from '../actions/system.js';
 
 const DIRECTION_KEYS = new Set(['up', 'down', 'left', 'right', 'select']);
-const MEDIA_ACTIONS = new Set(['play_pause', 'volume_up', 'volume_down', 'mute']);
+const MEDIA_ACTIONS = new Set(['play_pause', 'volume_up', 'volume_down', 'mute', 'next_track', 'prev_track']);
 const SYSTEM_ACTIONS = new Set(['sleep', 'back']);
 
 export function registerHandlers(io, socket) {

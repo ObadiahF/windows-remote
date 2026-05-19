@@ -60,13 +60,13 @@ Arrow keys + return for "select".
 | Ack err | `{"error": "Invalid \"key\". Must be one of: up, down, left, right, select"}` |
 
 #### `media`
-Media keys.
+Media keys. `next_track` / `prev_track` map to the OS skip-track media keys (VK_MEDIA_NEXT_TRACK `0xB0` / VK_MEDIA_PREV_TRACK `0xB1` on Windows).
 
 | | |
 |---|---|
-| Payload | `{"action": "play_pause" \| "volume_up" \| "volume_down" \| "mute"}` |
+| Payload | `{"action": "play_pause" \| "volume_up" \| "volume_down" \| "mute" \| "next_track" \| "prev_track"}` |
 | Ack ok | `{"ok": true}` |
-| Ack err | `{"error": "Invalid \"action\". Must be one of: play_pause, volume_up, volume_down, mute"}` |
+| Ack err | `{"error": "Invalid \"action\". Must be one of: play_pause, volume_up, volume_down, mute, next_track, prev_track"}` |
 
 #### `system`
 System actions. `sleep` = lock/sleep the machine. `back` = Esc / browser-back equivalent.

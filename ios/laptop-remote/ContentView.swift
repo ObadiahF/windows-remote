@@ -21,7 +21,9 @@ struct ContentView: View {
                     onKeyboard: {
                         Haptics.tap()
                         showKeyboard = true
-                    }
+                    },
+                    onPrevTrack: { send(.media(.prevTrack)) },
+                    onNextTrack: { send(.media(.nextTrack)) }
                 )
             }
             .padding()
